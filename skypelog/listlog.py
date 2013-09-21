@@ -10,6 +10,7 @@ if __name__ == '__main__':
                          nodes=[{'host':sys.argv[1], 'pb_port':8087}])
     skypelog_bucket = rc.bucket('skypelog')
     for keys in skypelog_bucket.stream_keys():
-        print(keys)
+        ##print(keys)
         for key in keys:
+            print(">>> %s" % key)
             print(skypelog_bucket.get(key).data)
