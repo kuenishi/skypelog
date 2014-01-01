@@ -40,7 +40,7 @@ def handle_riak(msg, command):
             if len(commands) > 2:
                 try:
                     k = sandbox_bucket.new(commands[1], data=' '.join(commands[2:]))
-                    k.store()
+                    msg.Chat.SendMessage(k.store())
                 except TypeError as e:
                     msg.Chat.SendMessage(e)
 
@@ -63,7 +63,7 @@ def handler(msg, event):
     elif msg.Body == '#riak':      handle_riak(msg, None)
     elif msg.Body[:6] == '#riak ': handle_riak(msg, msg.Body[6:])
 #    elif msg.Body[:8] == '#search ': handle_search(msg)
-    
+
     if msg.Body == '#pong' and msg.FromHandle == 'kuenishi_bot': pass
     else: handle_msg(msg, event)
 
