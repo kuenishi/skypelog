@@ -9,8 +9,24 @@ rc = riak.RiakClient(host=sys.argv[1],port=8098)
 
 skypelog_bucket = rc.bucket('skypelog')
 
+def handle_ping(msg):
+    msg.Chat.SendMessage('#pong')
+
+#def handle_search(msg):
+#    date = msg.Body[8:]
+#    data = skypelog_bucket.get_index('DateTime_bin', date, return_terms=True)
+#    print data
+
+
 def handler(msg, event):
     """ msg is instance of chat.ChatMessage see chat.py """
+    if msg.Body == '#ping':
+        handle_ping(msg)
+#    elif msg.Body[:8] == '#search ': handle_search(msg)
+    else:
+        handle_msg(msg, event)
+
+def handle_msg(msg, event):
     m = {}
     m['Body'] = msg.Body
     m['Topic'] = msg.Chat.Topic
@@ -33,10 +49,15 @@ def handler(msg, event):
     log.add_index('event_bin', m['event'])
     log.add_index('ChatName_bin', m['ChatName'])
     log.store()
+
     print(json.dumps(m))
-    if log.exists(): print( "%s stored." % key )
+    if log.exists():
+        print( "%s stored." % key )
+        ## infinite loop msg.Chat.SendMessage('stored into riak: %s' % key)
+    else:
+        msg.Chat.SendMessage('failed to store data; riak seems dead')
     ## print(log.get_metadata())
-    print("\n")
+
 
 if __name__ == '__main__':
     skype = Skype4Py.Skype()
