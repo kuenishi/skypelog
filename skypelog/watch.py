@@ -7,7 +7,7 @@ import urllib2
 
 #rc = riak.RiakClient(host="controller", port=8098)
 host = sys.argv[1]
-rc = riak.RiakClient(host=sys.argv[1],port=8098)
+rc = riak.RiakClient(host=sys.argv[1],pb_port=8098)
 
 skypelog_bucket = rc.bucket('skypelog')
 sandbox_bucket = rc.bucket('sandbox')
@@ -44,9 +44,9 @@ def handle_riak(msg, command):
             if len(commands) > 2:
                 key = unicode_to_hex(commands[1])
                 k = sandbox_bucket.new(key)
+                k.encoded_data=' '.join(commands[2:]).encode('utf8')
+                k.charset='utf8'
                 try:
-                    k.encoded_data=' '.join(commands[2:]).encode('utf8')
-                    k.charset='utf8'
                     msg.Chat.SendMessage(k.store())
                 except TypeError as e:
                     msg.Chat.SendMessage(e)
