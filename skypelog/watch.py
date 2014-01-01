@@ -20,11 +20,11 @@ def handle_ping(msg):
 
 def handler(msg, event):
     """ msg is instance of chat.ChatMessage see chat.py """
-    if msg.Body == '#ping':
-        handle_ping(msg)
+    if msg.Body == '#ping': handle_ping(msg)
 #    elif msg.Body[:8] == '#search ': handle_search(msg)
-    else:
-        handle_msg(msg, event)
+
+    if msg.Body == '#pong' and msg.FromHandle == 'kuenishi_bot': pass
+    else: handle_msg(msg, event)
 
 def handle_msg(msg, event):
     m = {}
