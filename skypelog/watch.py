@@ -20,6 +20,10 @@ def handle_ping(msg):
 #    data = skypelog_bucket.get_index('DateTime_bin', date, return_terms=True)
 #    print data
 
+
+def unicode_to_hex(s):
+    return ''.join(hex(ord(i)) for i in s)
+
 def handle_riak(msg, command):
     c = command
     if command is None: c = 'ping'
@@ -38,19 +42,24 @@ def handle_riak(msg, command):
 ''')
         elif commands[0] == 'put':
             if len(commands) > 2:
+                key = unicode_to_hex(commands[1])
+                k = sandbox_bucket.new(key)
                 try:
-                    k = sandbox_bucket.new(commands[1], data=' '.join(commands[2:]))
+                    k.encoded_data=' '.join(commands[2:]).encode('utf8')
+                    k.charset='utf8'
                     msg.Chat.SendMessage(k.store())
                 except TypeError as e:
                     msg.Chat.SendMessage(e)
 
         elif commands[0] == 'get':
             if len(commands) > 1:
-                obj = sandbox_bucket.get(commands[1])
-                msg.Chat.SendMessage(obj.get_data())
+                key = unicode_to_hex(commands[1])
+                obj = sandbox_bucket.get(key)
+                msg.Chat.SendMessage(obj.encoded_data)
         elif commands[0] == 'delete':
             if len(commands) > 1:
-                obj = sandbox_bucket.get(commands[1])
+                key = unicode_to_hex(commands[1])
+                obj = sandbox_bucket.get(key)
                 obj.delete()
                 msg.Chat.SendMessage('deleted')
         else:
@@ -92,7 +101,7 @@ def handle_msg(msg, event):
     log.store()
 
     print(json.dumps(m))
-    if log.exists():
+    if log.exists:
         print( "%s stored." % key )
         ## infinite loop msg.Chat.SendMessage('stored into riak: %s' % key)
     else:
