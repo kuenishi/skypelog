@@ -10,6 +10,7 @@ host = sys.argv[1]
 rc = riak.RiakClient(host=sys.argv[1],port=8098)
 
 skypelog_bucket = rc.bucket('skypelog')
+sandbox_bucket = rc.bucket('sandbox')
 
 def handle_ping(msg):
     msg.Chat.SendMessage('#pong')
@@ -22,11 +23,39 @@ def handle_ping(msg):
 def handle_riak(msg, command):
     c = command
     if command is None: c = 'ping'
-    elif command[:7] == 'buckets':
+    elif command[:7] == 'buckets/skypelog':
         msg.Chat.SendMessage("don't do query!!")
     else:
-        res = urllib2.urlopen('http://%s:8098/%s' % (host, c)).read()
-        msg.Chat.SendMessage(res)
+        commands = command.split(' ')
+        if commands[0] == 'help':
+            msg.Chat.SendMessage('''
+#riak help
+#riak ping
+#riak stats
+#riak put <key> <data>
+#riak get <key>
+#riak delete <key>
+''')
+        elif commands[0] == 'put':
+            if len(commands) > 2:
+                try:
+                    k = sandbox_bucket.new(commands[1], data=' '.join(commands[2:]))
+                    k.store()
+                except TypeError as e:
+                    msg.Chat.SendMessage(e)
+
+        elif commands[0] == 'get':
+            if len(commands) > 1:
+                obj = sandbox_bucket.get(commands[1])
+                msg.Chat.SendMessage(obj.get_data())
+        elif commands[0] == 'delete':
+            if len(commands) > 1:
+                obj = sandbox_bucket.get(commands[1])
+                obj.delete()
+                msg.Chat.SendMessage('deleted')
+        else:
+            res = urllib2.urlopen('http://%s:8098/%s' % (host, c)).read()
+            msg.Chat.SendMessage(res)
 
 def handler(msg, event):
     """ msg is instance of chat.ChatMessage see chat.py """
