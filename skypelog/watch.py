@@ -3,8 +3,10 @@ import riak
 import time
 import json
 import sys
+import urllib2
 
 #rc = riak.RiakClient(host="controller", port=8098)
+host = sys.argv[1]
 rc = riak.RiakClient(host=sys.argv[1],port=8098)
 
 skypelog_bucket = rc.bucket('skypelog')
@@ -17,12 +19,22 @@ def handle_ping(msg):
 #    data = skypelog_bucket.get_index('DateTime_bin', date, return_terms=True)
 #    print data
 
+def handle_riak(msg, command):
+    c = command
+    if command is None: c = 'ping'
+    elif command[:7] == 'buckets':
+        msg.Chat.SendMessage("don't do query!!")
+    else:
+        res = urllib2.urlopen('http://%s:8098/%s' % (host, c)).read()
+        msg.Chat.SendMessage(res)
 
 def handler(msg, event):
     """ msg is instance of chat.ChatMessage see chat.py """
-    if msg.Body == '#ping': handle_ping(msg)
+    if   msg.Body == '#ping':      handle_ping(msg)
+    elif msg.Body == '#riak':      handle_riak(msg, None)
+    elif msg.Body[:6] == '#riak ': handle_riak(msg, msg.Body[6:])
 #    elif msg.Body[:8] == '#search ': handle_search(msg)
-
+    
     if msg.Body == '#pong' and msg.FromHandle == 'kuenishi_bot': pass
     else: handle_msg(msg, event)
 
