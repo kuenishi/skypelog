@@ -4,6 +4,7 @@ import time
 import json
 import sys
 import urllib2
+import random
 
 #rc = riak.RiakClient(host="controller", port=8098)
 host = sys.argv[1]
@@ -33,12 +34,12 @@ def handle_riak(msg, command):
         commands = command.split(' ')
         if commands[0] == 'help':
             msg.Chat.SendMessage('''
-#riak help
-#riak ping
-#riak stats
-#riak put <key> <data>
-#riak get <key>
-#riak delete <key>
+&riak help
+&riak ping
+&riak stats
+&riak put <key> <data>
+&riak get <key>
+&riak delete <key>
 ''')
         elif commands[0] == 'put':
             if len(commands) > 2:
@@ -55,7 +56,10 @@ def handle_riak(msg, command):
             if len(commands) > 1:
                 key = unicode_to_hex(commands[1])
                 obj = sandbox_bucket.get(key)
-                msg.Chat.SendMessage(obj.encoded_data)
+                if sandbox_bucket.allow_mult:
+                    msg.Chat.SendMessage(random.choice(obj.siblings).encoded_data)
+                else:
+                    msg.Chat.SendMessage(obj.encoded_data)
         elif commands[0] == 'delete':
             if len(commands) > 1:
                 key = unicode_to_hex(commands[1])
@@ -68,12 +72,12 @@ def handle_riak(msg, command):
 
 def handler(msg, event):
     """ msg is instance of chat.ChatMessage see chat.py """
-    if   msg.Body == '#ping':      handle_ping(msg)
-    elif msg.Body == '#riak':      handle_riak(msg, None)
-    elif msg.Body[:6] == '#riak ': handle_riak(msg, msg.Body[6:])
+    if   msg.Body == '&ping':      handle_ping(msg)
+    elif msg.Body == '&riak':      handle_riak(msg, None)
+    elif msg.Body[:6] == '&riak ': handle_riak(msg, msg.Body[6:])
 #    elif msg.Body[:8] == '#search ': handle_search(msg)
 
-    if msg.Body == '#pong' and msg.FromHandle == 'kuenishi_bot': pass
+    if msg.Body == '&pong' and msg.FromHandle == 'kuenishi_bot': pass
     else: handle_msg(msg, event)
 
 def handle_msg(msg, event):
